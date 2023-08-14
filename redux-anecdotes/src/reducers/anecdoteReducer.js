@@ -1,3 +1,17 @@
+export const createNewAnecdote = (anecdoteText) => {
+  return {
+    type: 'CREATE',
+    payload: {
+      content: anecdoteText,
+      id: getId(),
+      votes: 0
+    }
+  }
+}
+
+
+
+
 const anecdotesAtStart = [
   'If it hurts, do it more often',
   'Adding manpower to a late software project makes it later!',
@@ -27,16 +41,7 @@ const sortByVotes = (anecdotes) => {
 
 const initialState = anecdotesAtStart.map(asObject)
 
-export const createNewAnecdote = (anecdoteText) => {
-  return {
-    type: 'CREATE',
-    payload: {
-      content: anecdoteText,
-      id: getId(),
-      votes: 0
-    }
-  }
-}
+
 
 export const voteForId = (id) => {
   return ({
@@ -45,7 +50,7 @@ export const voteForId = (id) => {
   })
 }
 
-const reducer = (state = initialState, action) => {
+const anecdoteReducer = (state = initialState, action) => {
   console.log('state now: ', state)
   console.log('action', action)
 
@@ -102,4 +107,4 @@ const reducer = (state = initialState, action) => {
 
 
 
-export default reducer
+export default anecdoteReducer
