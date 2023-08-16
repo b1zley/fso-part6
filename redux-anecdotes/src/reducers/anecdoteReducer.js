@@ -1,29 +1,8 @@
-export const createNewAnecdote = (anecdoteText) => {
-  return {
-    type: 'CREATE',
-    payload: {
-      content: anecdoteText,
-      id: getId(),
-      votes: 0
-    }
-  }
-}
+import { createSlice } from '@reduxjs/toolkit'
+import anecdoteServices from '../services/anecdotes'
 
 
-
-
-const anecdotesAtStart = [
-  'If it hurts, do it more often',
-  'Adding manpower to a late software project makes it later!',
-  'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
-  'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
-  'Premature optimization is the root of all evil.',
-  'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
-]
-
-export const getId = () => (100000 * Math.random()).toFixed(0)
-
-
+const initialState = []
 
 const asObject = (anecdote) => {
   return {
@@ -33,33 +12,27 @@ const asObject = (anecdote) => {
   }
 }
 
+export const getId = () => (100000 * Math.random()).toFixed(0)
+
 const sortByVotes = (anecdotes) => {
   console.log('in sort by votes')
   let sortedAnecdotes = anecdotes.sort((a, b) => b.votes - a.votes)
   return sortedAnecdotes
 }
 
-const initialState = anecdotesAtStart.map(asObject)
+// const initialState = anecdotesAtStart.map(asObject)
 
-
-
-export const voteForId = (id) => {
-  return ({
-    type: 'VOTE',
-    payload: { id }
-  })
-}
-
-const anecdoteReducer = (state = initialState, action) => {
-  console.log('state now: ', state)
-  console.log('action', action)
-
-
-
-  switch (action.type) {
-    case 'VOTE': {
-      const idToVote = action.payload.id
-      console.log('idToVote', idToVote)
+const anecdoteSlice = createSlice({
+  name: 'anecdotes',
+  initialState,
+  reducers: {
+    createNewAnecdote(state, action) {
+      
+      state.push(action.payload)
+    },
+    voteForId(state, action) {
+      const idToVote = action.payload
+      console.log(idToVote)
       const anecdotes = state
       const indexAnecdoteToVote = anecdotes.findIndex((anecdote) => {
         return anecdote.id === idToVote
@@ -69,8 +42,6 @@ const anecdoteReducer = (state = initialState, action) => {
         ...anecdotes[indexAnecdoteToVote],
         votes: anecdotes[indexAnecdoteToVote].votes + 1
       }
-
-
       //define replacement anecdote from find method
       const replacementAnecdote = newAnecdote
 
@@ -83,28 +54,33 @@ const anecdoteReducer = (state = initialState, action) => {
       replacementAnecdotes[indexToReplace] = replacementAnecdote
       return sortByVotes(replacementAnecdotes)
 
+
+
+    },
+
+    setAnecdotes(state, action) {
+      let newAnecdotes = action.payload
+      return newAnecdotes
     }
 
-    case 'CREATE': {
-      const newAnecdote = action.payload
+    
 
-      const anecdotes = state
-
-      const newAnecdotes = anecdotes.concat(newAnecdote)
-      console.log(newAnecdotes)
-
-      return (sortByVotes(newAnecdotes))
-    }
-
-
-
-
-    default:
-      return state
   }
+})
 
+
+
+
+export const {  createNewAnecdote , voteForId , setAnecdotes} = anecdoteSlice.actions
+
+export const initializeAnecdotes = () => {
+  return async dispatch => {
+    const anecdotes = await anecdoteServices.getAll()
+    console.log('anecdotes from initialize',anecdotes)
+    dispatch(setAnecdotes(anecdotes))
+  }
 }
 
 
 
-export default anecdoteReducer
+export default anecdoteSlice.reducer
