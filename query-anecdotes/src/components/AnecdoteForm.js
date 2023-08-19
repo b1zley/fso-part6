@@ -1,15 +1,53 @@
-// import addNewAnecdote  from '../services/anecdotes'
-import anecdoteService from '../services/anecdotes'
-import { useQuery, useMutation, useQueryClient } from 'react-query'
+
+import {  useMutation, useQueryClient } from 'react-query'
 import { addNewAnecdote } from '../services/anecdotes'
 
-import axios from 'axios'
+import { useContext } from 'react'
+
+import NotificationContext from '../context/NotificationContext'
+
 
 
 
 
 const AnecdoteForm = () => {
+  
   const queryClient = useQueryClient()
+  const [notification, notificationDispatch] = useContext(NotificationContext)
+
+
+  const errorDispatchAndClear = (errorMessage) => {
+    notificationDispatch({
+      type: 'UPDATE',
+      payload: {
+          isError: true,
+          displayText: `failed to create - ${errorMessage}`
+      }
+  })
+
+  setTimeout(() => {
+      notificationDispatch({
+          type: 'CLEAR'
+      })
+  }, 5000)
+  }
+
+  const createDispatchAndClear = (anecdote) => {
+    notificationDispatch({
+      type: 'UPDATE',
+      payload: {
+          isError: false,
+          displayText: `successfully created ${anecdote.content}`
+      }
+  })
+
+  setTimeout(() => {
+      notificationDispatch({
+          type: 'CLEAR'
+      })
+  }, 5000)
+  }
+  
 
 
 
@@ -17,8 +55,14 @@ const AnecdoteForm = () => {
     mutationFn: (anecdote) => {
       return addNewAnecdote(anecdote)
     },
-    onSuccess: () => {
-      return queryClient.invalidateQueries('anecdotes')
+    onSuccess: (anecdote) => {
+      queryClient.invalidateQueries('anecdotes')
+      
+      createDispatchAndClear(anecdote)
+    },
+    onError: (errorMessage) => {
+      errorDispatchAndClear(errorMessage.message)
+      
     }
   })
 
@@ -50,6 +94,6 @@ const AnecdoteForm = () => {
       </form>
     </div>
   )
-}
+  }
 
 export default AnecdoteForm

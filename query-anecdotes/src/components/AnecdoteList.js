@@ -2,17 +2,59 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import anecdoteService from '../services/anecdotes'
 import { updateAnecdote } from '../services/anecdotes'
 
+import NotificationContext from '../context/NotificationContext'
+import { useContext } from 'react'
+
 const AnecdoteList = () => {
+    const [notification, notificationDispatch] = useContext(NotificationContext)
 
     const queryClient = useQueryClient()
+
+
+    const votingDispatchAndClear = (anecdote) => {
+        notificationDispatch({
+            type: 'UPDATE',
+            payload: {
+                isError: false,
+                displayText: `voted for ${anecdote.content}`
+            }
+        })
+
+        setTimeout(() => {
+            notificationDispatch({
+                type: 'CLEAR'
+            })
+        }, 5000)
+    }
+    
+    const failedVotingDispatchAndClear = (anecdote) => {
+        notificationDispatch({
+            type: 'UPDATE',
+            payload: {
+                isError: true,
+                displayText: `failed to vote for ${anecdote.content}`
+            }
+        }
+        )
+        setTimeout(() => {
+            notificationDispatch({
+                type: 'CLEAR'
+            })
+        }, 5000)
+    }
 
     const updateAnecdoteMutation = useMutation({
         mutationFn: (newAnecdote) => {
             return updateAnecdote(newAnecdote)
             
         },
-        onSuccess: () => {
+        onSuccess: (newAnecdote) => {
             queryClient.invalidateQueries('anecdotes')
+            
+            votingDispatchAndClear(newAnecdote.data)
+        },
+        onError:(newAnecdote) => {
+            failedVotingDispatchAndClear(newAnecdote)
         }
     })
 
@@ -50,6 +92,11 @@ const AnecdoteList = () => {
                 votes: anecdote.votes + 1
             }
             updateAnecdoteMutation.mutate(newAnecdote)
+            
+            
+
+        
+        
         }
 
         const anecdotes = result.data
